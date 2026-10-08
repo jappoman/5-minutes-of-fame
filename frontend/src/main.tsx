@@ -29,7 +29,7 @@ function App(){
  React.useEffect(()=>{pool?.getCurrentUser()?.getSession((err:Error|null,session:any)=>{if(!err&&session)T(session.getIdToken().getJwtToken())})},[]);
  React.useEffect(()=>{
   if(stage.status!=="live"||!stage.playbackUrl||!video.current||!IVSPlayer.isPlayerSupported)return;
-  const p=IVSPlayer.create();p.attachHTMLVideoElement(video.current);p.load(stage.playbackUrl);p.play();
+  const p=IVSPlayer.create({ wasmWorker: "https://player.live-video.net/1.46.0/amazon-ivs-wasmworker.min.js", wasmBinary: "https://player.live-video.net/1.46.0/amazon-ivs-wasmworker.min.wasm" });p.attachHTMLVideoElement(video.current);p.load(stage.playbackUrl);p.play();
   return()=>p.delete();
  },[stage.status,stage.playbackUrl]);
  const run=async(f:()=>Promise<void>)=>{B(true);try{await f()}catch(e){M((e as Error).message)}finally{B(false)}};

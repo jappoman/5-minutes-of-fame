@@ -1,7 +1,7 @@
 import type { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from "aws-lambda";
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient, GetCommand, PutCommand, UpdateCommand, QueryCommand, TransactWriteCommand } from "@aws-sdk/lib-dynamodb";
-import { IVSClient, CreateStreamKeyCommand, DeleteStreamKeyCommand, StopStreamCommand } from "@aws-sdk/client-ivs";
+import { IvsClient, CreateStreamKeyCommand, DeleteStreamKeyCommand, StopStreamCommand } from "@aws-sdk/client-ivs";
 import { SchedulerClient, CreateScheduleCommand } from "@aws-sdk/client-scheduler";
 import { randomUUID } from "node:crypto";
 
@@ -44,7 +44,7 @@ async function expireIfNeeded() {
   if (stage.status === "live" && stage.endsAt && stage.endsAt <= now()) await endStage(stage);
 }
 function identity(event: APIGatewayProxyEventV2): string | undefined {
-  const claims = (event.requestContext.authorizer as { jwt?: { claims?: Record<string, unknown> } } | undefined)?.jwt?.claims;
+  const claims = ((event.requestContext as unknown as { authorizer?: unknown }).authorizer as { jwt?: { claims?: Record<string, unknown> } } | undefined)?.jwt?.claims;
   return typeof claims?.sub === "string" ? claims.sub : undefined;
 }
 export async function handler(event: APIGatewayProxyEventV2): Promise<APIGatewayProxyResultV2> {

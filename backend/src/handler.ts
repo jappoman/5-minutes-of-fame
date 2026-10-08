@@ -6,7 +6,7 @@ import { SchedulerClient, CreateScheduleCommand } from "@aws-sdk/client-schedule
 import { randomUUID } from "node:crypto";
 
 const db = DynamoDBDocumentClient.from(new DynamoDBClient({}));
-const ivs = new IVSClient({});
+const ivs = new IvsClient({});
 const scheduler = new SchedulerClient({});
 const table = process.env.TABLE_NAME!;
 const channelArn = process.env.IVS_CHANNEL_ARN!;

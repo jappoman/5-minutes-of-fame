@@ -1,0 +1,45 @@
+name: Deploy dev
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  id-token: write
+  contents: read
+jobs:
+  build-deploy:
+    if: vars.AWS_ROLE_ARN != ''
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: eu-west-1
+      - name: Install and validate backend
+        working-directory: backend
+        run: npm install && npm run build
+      - name: Install and validate infrastructure
+        working-directory: infra
+        run: npm install && npm run build
+      - name: Deploy infrastructure
+        working-directory: infra
+        run: npm run deploy -- --outputs-file cdk-outputs.json
+      - name: Read CDK outputs
+        id: cdk
+        run: |
+          echo "bucket=$(jq -r '.FiveMinutesDev.FrontendBucket' infra/cdk-outputs.json)" >> "$GITHUB_OUTPUT"
+          echo "distribution=$(jq -r '.FiveMinutesDev.CloudFrontDistributionId' infra/cdk-outputs.json)" >> "$GITHUB_OUTPUT"
+          echo "api=$(jq -r '.FiveMinutesDev.ApiUrl' infra/cdk-outputs.json)" >> "$GITHUB_OUTPUT"
+      - name: Build frontend
+        working-directory: frontend
+        env:
+          VITE_API_URL: ${{ steps.cdk.outputs.api }}
+        run: npm install && npm run build
+      - name: Upload site
+        run: aws s3 sync frontend/dist/ "s3://${{ steps.cdk.outputs.bucket }}/" --delete
+      - name: Invalidate cache
+        run: aws cloudfront create-invalidation --distribution-id "${{ steps.cdk.outputs.distribution }}" --paths '/*'

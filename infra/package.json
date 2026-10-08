@@ -1,0 +1,21 @@
+{
+  "name": "five-minutes-infra",
+  "private": true,
+  "version": "0.0.1",
+  "scripts": {
+    "build": "tsc --noEmit",
+    "synth": "cdk synth",
+    "deploy": "cdk deploy --require-approval never"
+  },
+  "dependencies": {
+    "aws-cdk-lib": "^2.190.0",
+    "constructs": "^10.4.2"
+  },
+  "devDependencies": {
+    "aws-cdk": "^2.1000.0",
+    "@types/node": "^22.15.0",
+    "typescript": "~5.8.3",
+    "tsx": "^4.19.0",
+    "esbuild": "^0.25.0"
+  }
+}

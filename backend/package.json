@@ -1,13 +1,15 @@
 {
   "name": "five-minutes-backend",
   "private": true,
-  "version": "0.0.1",
+  "version": "0.1.0",
   "scripts": {
     "build": "tsc --noEmit"
   },
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.800.0",
-    "@aws-sdk/lib-dynamodb": "^3.800.0"
+    "@aws-sdk/lib-dynamodb": "^3.800.0",
+    "@aws-sdk/client-ivs": "^3.800.0",
+    "@aws-sdk/client-scheduler": "^3.800.0"
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.149",

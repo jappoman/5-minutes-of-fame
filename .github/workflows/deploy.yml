@@ -19,10 +19,10 @@ jobs:
         with:
           role-to-assume: ${{ vars.AWS_ROLE_ARN }}
           aws-region: eu-west-1
-      - name: Install and validate backend
+      - name: Validate backend
         working-directory: backend
         run: npm install && npm run build
-      - name: Install and validate infrastructure
+      - name: Validate infrastructure
         working-directory: infra
         run: npm install && npm run build
       - name: Deploy infrastructure
@@ -31,15 +31,18 @@ jobs:
       - name: Read CDK outputs
         id: cdk
         run: |
-          echo "bucket=$(jq -r '.FiveMinutesDev.FrontendBucket' infra/cdk-outputs.json)" >> "$GITHUB_OUTPUT"
-          echo "distribution=$(jq -r '.FiveMinutesDev.CloudFrontDistributionId' infra/cdk-outputs.json)" >> "$GITHUB_OUTPUT"
-          echo "api=$(jq -r '.FiveMinutesDev.ApiUrl' infra/cdk-outputs.json)" >> "$GITHUB_OUTPUT"
+          for field in FrontendBucket CloudFrontDistributionId ApiUrl UserPoolId UserPoolClientId; do
+            value=$(jq -r --arg field "$field" '.FiveMinutesDev[$field]' infra/cdk-outputs.json)
+            echo "$field=$value" >> "$GITHUB_OUTPUT"
+          done
       - name: Build frontend
         working-directory: frontend
         env:
-          VITE_API_URL: ${{ steps.cdk.outputs.api }}
+          VITE_API_URL: ${{ steps.cdk.outputs.ApiUrl }}
+          VITE_COGNITO_POOL_ID: ${{ steps.cdk.outputs.UserPoolId }}
+          VITE_COGNITO_CLIENT_ID: ${{ steps.cdk.outputs.UserPoolClientId }}
         run: npm install && npm run build
       - name: Upload site
-        run: aws s3 sync frontend/dist/ "s3://${{ steps.cdk.outputs.bucket }}/" --delete
+        run: aws s3 sync frontend/dist/ "s3://${{ steps.cdk.outputs.FrontendBucket }}/" --delete
       - name: Invalidate cache
-        run: aws cloudfront create-invalidation --distribution-id "${{ steps.cdk.outputs.distribution }}" --paths '/*'
+        run: aws cloudfront create-invalidation --distribution-id "${{ steps.cdk.outputs.CloudFrontDistributionId }}" --paths '/*'
